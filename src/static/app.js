@@ -64,6 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeTimeFilter) {
       currentTimeRange = activeTimeFilter.dataset.time;
     }
+
+    const sharedActivity = new URLSearchParams(window.location.search).get(
+      "activity"
+    );
+    if (sharedActivity) {
+      searchQuery = sharedActivity;
+      searchInput.value = sharedActivity;
+    }
   }
 
   // Function to set day filter
@@ -498,6 +506,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareText = `Check out ${name} at Mergington High School! ${formattedSchedule}`;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(
+      name
+    )}`;
 
     // Create activity tag
     const tagHtml = `
@@ -528,6 +540,17 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="tooltip-text">Regular meetings at this time throughout the semester</span>
       </p>
       ${capacityIndicator}
+      <div class="share-actions">
+        <button class="share-button" data-share="native" data-activity="${name}" aria-label="Share ${name}">
+          Share
+        </button>
+        <button class="share-button share-whatsapp" data-share="whatsapp" data-activity="${name}" aria-label="Share ${name} on WhatsApp">
+          WhatsApp
+        </button>
+        <button class="share-button share-facebook" data-share="facebook" data-activity="${name}" aria-label="Share ${name} on Facebook">
+          Facebook
+        </button>
+      </div>
       <div class="participants-list">
         <h5>Current Participants:</h5>
         <ul>
@@ -586,6 +609,51 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    const shareButtons = activityCard.querySelectorAll(".share-button");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        const shareType = button.dataset.share;
+
+        if (shareType === "whatsapp") {
+          const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
+            `${shareText} ${shareUrl}`
+          )}`;
+          window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+          return;
+        }
+
+        if (shareType === "facebook") {
+          const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+            shareUrl
+          )}`;
+          window.open(facebookUrl, "_blank", "noopener,noreferrer");
+          return;
+        }
+
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: name,
+              text: shareText,
+              url: shareUrl,
+            });
+            return;
+          } catch (error) {
+            if (error.name === "AbortError") {
+              return;
+            }
+          }
+        }
+
+        try {
+          await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+          showMessage("Share link copied. You can now send it to a friend!", "success");
+        } catch (error) {
+          showMessage("Sharing is not available on this device.", "error");
+        }
+      });
+    });
 
     activitiesList.appendChild(activityCard);
   }
