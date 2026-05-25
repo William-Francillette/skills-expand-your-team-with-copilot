@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
+  const themeToggleButton = document.getElementById("theme-toggle-button");
 
   // Activity categories with corresponding colors
   const activityTypes = {
@@ -43,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Authentication state
   let currentUser = null;
+  let currentTheme = "light";
 
   // Time range mappings for the dropdown
   const timeRanges = {
@@ -50,6 +52,28 @@ document.addEventListener("DOMContentLoaded", () => {
     afternoon: { start: "15:00", end: "18:00" }, // After school hours
     weekend: { days: ["Saturday", "Sunday"] }, // Weekend days
   };
+
+  function applyTheme(theme) {
+    currentTheme = theme === "dark" ? "dark" : "light";
+    const isDarkMode = currentTheme === "dark";
+    document.body.classList.toggle("dark-mode", isDarkMode);
+
+    if (themeToggleButton) {
+      themeToggleButton.textContent = isDarkMode ? "☀️ Light" : "🌙 Dark";
+      themeToggleButton.setAttribute(
+        "aria-label",
+        isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+      );
+    }
+  }
+
+  function initializeTheme() {
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDarkMode =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    applyTheme(savedTheme || (prefersDarkMode ? "dark" : "light"));
+  }
 
   // Initialize filters from active elements
   function initializeFilters() {
@@ -641,6 +665,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  if (themeToggleButton) {
+    themeToggleButton.addEventListener("click", () => {
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      applyTheme(newTheme);
+      localStorage.setItem("theme", newTheme);
+    });
+  }
+
   // Open registration modal
   function openRegistrationModal(activityName) {
     modalActivityName.textContent = activityName;
@@ -862,6 +894,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initialize app
+  initializeTheme();
   checkAuthentication();
   initializeFilters();
   fetchActivities();
