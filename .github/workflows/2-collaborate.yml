@@ -45,7 +45,7 @@ jobs:
           vars: |
             next_step_number: 3
 
-      - name: Create comment - add step content
+      - name: Create comment - add step content 2
         uses: GrantBirki/comment@v2.1.1
         with:
           repository: ${{ env.ISSUE_REPOSITORY }}
